@@ -1,17 +1,16 @@
 ﻿using HrApp.Services;
 using HrApp.ViewModels;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HrApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IAuthenticationService _authenticationService;
+        private readonly IIdentityService _identityService;
 
-        public AccountController(IAuthenticationService authentication)
+        public AccountController(IIdentityService identityService)
         {
-            _authenticationService = authentication;
+            _identityService = identityService;
         }
 
         #region Login
@@ -30,16 +29,13 @@ namespace HrApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> LoginUserName(LoginUserNameViewModel loginModel)
+        public async Task<IActionResult> LoginUserName(LoginUserNameViewModel login)
         {
             if (ModelState.IsValid)
             {
-                var result = await _authenticationService.SignInAsync(loginModel.UserName, null, loginModel.Password);
+                var result = await _identityService.LoginAsync(login.UserName, null, login.Password);
                 if (result.Succeeded)
-                {
-
                     return RedirectToAction("Index", "Home");
-                }
                 else
                 {
                     foreach (var error in result.Errors)
@@ -48,8 +44,7 @@ namespace HrApp.Controllers
                     }
                 }
             }
-
-            return View();
+            return View(login);
         }
 
         #endregion
@@ -62,23 +57,22 @@ namespace HrApp.Controllers
             return View();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> LoginEmailAsync(LoginEmailViewModel loginModel)
+        public async Task<IActionResult> LoginEmail(LoginEmailViewModel login)
         {
             if (ModelState.IsValid)
             {
-                var result = await _authenticationService.SignInAsync(null, loginModel.Email, loginModel.Password);
+                var result = await _identityService.LoginAsync(null, login.Email, login.Password);
                 if (result.Succeeded)
-                {
                     return RedirectToAction("Index", "Home");
-                }
                 else
                 {
-                    ModelState.AddModelError("", result.Errors!.FirstOrDefault());
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error);
+                    }
                 }
             }
-
-            return View();
+            return View(login);
         }
 
         #endregion
@@ -92,30 +86,23 @@ namespace HrApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegisterAsync(RegisterViewModel registrationData)
+        public async Task<IActionResult> RegisterAsync(RegisterViewModel register)
         {
             if (ModelState.IsValid)
             {
-                var identityUser = new IdentityUser
-                {
-                    Email = registrationData.Email,
-                    UserName = registrationData.UserName
-                };
-
-                var result = await _authenticationService.RegisterAsync(registrationData);
+                var result = await _identityService.RegisterAsync(register);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Login", "Account");
+                    return View("Login");
                 }
                 else
                 {
-                    foreach(var error in result.Errors)
-                    {
+                    foreach (var error in result.Errors)
                         ModelState.AddModelError("", error);
-                    }
                 }
             }
-            return View();
+
+            return View(register);
         }
 
         #endregion
@@ -124,15 +111,9 @@ namespace HrApp.Controllers
 
         public async Task<IActionResult> LogoutAsync()
         {
-            await _authenticationService.SignOutAsync();
-            return RedirectToAction("Login", "Account");
+            await _identityService.SignOutAsync();
+            return RedirectToAction(nameof(Login));
         }
-
-        #endregion
-
-        #region Facebook
-
-
 
         #endregion
     }

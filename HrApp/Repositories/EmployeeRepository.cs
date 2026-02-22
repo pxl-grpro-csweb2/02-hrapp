@@ -6,58 +6,41 @@ namespace HrApp.Repositories
 {
     public class EmployeeRepository : IEmployeeRepository
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _dbContext;
 
-        public EmployeeRepository(AppDbContext context)
+        public EmployeeRepository(AppDbContext dbContext)
         {
-            _context = context;
+            _dbContext = dbContext;
         }
 
         public async Task<IEnumerable<Employee>> GetAll()
         {
-            var employees = await _context.Employees.ToListAsync();
-            return employees;
+            return await _dbContext.Employees.ToListAsync();
         }
 
         public async Task<Employee?> GetById(int? id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-
-            if (employee == null)
-            {
-                throw new KeyNotFoundException();
-            }
-            return employee;
+            return await _dbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == id);
         }
 
         public async Task Add(Employee employee)
         {
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync(); //aparte method van maken (ook in Interface)
-        }
-
-        public async Task Delete(Employee employee)
-        {
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
+            await _dbContext.Employees.AddAsync(employee);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task Update(Employee employee)
         {
-             var existing = await _context.Employees.FindAsync(employee.EmployeeId);
-
-            if (existing == null)
-            {
-                throw new KeyNotFoundException();
-            }
-
-            _context.Update(employee);
-            await _context.SaveChangesAsync();
+            _dbContext.Employees.Update(employee);
+            await _dbContext.SaveChangesAsync();
         }
 
-        //public async Task<int> SaveChangesAsync()
-        //{
-        //    return await _context.SaveChangesAsync();
-        //}
+        public async Task Delete(Employee employee)
+        {
+            _dbContext.Employees.Remove(employee);
+            await _dbContext.SaveChangesAsync();
+        }
+
+
     }
 }

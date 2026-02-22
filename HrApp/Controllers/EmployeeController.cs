@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using HrApp.Data;
-using HrApp.Models;
+﻿using HrApp.Models;
 using HrApp.Repositories;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HrApp.Controllers
 {
@@ -15,19 +8,15 @@ namespace HrApp.Controllers
     {
         private readonly IEmployeeRepository _employeeRepository;
 
-        public EmployeeController(IEmployeeRepository repository)
+        public EmployeeController(IEmployeeRepository employeeRepository)
         {
-            _employeeRepository = repository;
+            _employeeRepository = employeeRepository;
         }
 
         // GET: Employee
         public async Task<IActionResult> Index()
         {
-            var employees = await _employeeRepository.GetAll();
-            return View(employees);
-              //return _context.Employees != null ? 
-              //            View(await _context.Employees.ToListAsync()) :
-              //            Problem("Entity set 'AppDbContext.Employee'  is null.");
+              return View(await _employeeRepository.GetAll());
         }
 
         // GET: Employee/Details/5
@@ -79,7 +68,6 @@ namespace HrApp.Controllers
             }
 
             var employee = await _employeeRepository.GetById(id);
-
             if (employee == null)
             {
                 return NotFound();
@@ -94,10 +82,11 @@ namespace HrApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("EmployeeId,FirstName,LastName")] Employee employee)
         {
-            if (id != employee.EmployeeId)
-            {
+            if (employee is null)
                 return BadRequest();
-            }
+
+            if (id != employee.EmployeeId)
+                return BadRequest();
 
             if (ModelState.IsValid)
             {
@@ -116,7 +105,6 @@ namespace HrApp.Controllers
             }
 
             var employee = await _employeeRepository.GetById(id);
-                
             if (employee == null)
             {
                 return NotFound();
@@ -131,7 +119,6 @@ namespace HrApp.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var employee = await _employeeRepository.GetById(id);
-            
             if (employee != null)
             {
                 await _employeeRepository.Delete(employee);
