@@ -1,4 +1,5 @@
-﻿using HrApp.ViewModels;
+﻿using HrApp.Services;
+using HrApp.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,13 +7,11 @@ namespace HrApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IIdentityService _service;
 
-        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public AccountController(IIdentityService service)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _service = service;
         }
 
         #region Login
@@ -94,36 +93,6 @@ namespace HrApp.Controllers
 
         #endregion
 
-        [HttpPost]
-        public async Task<IActionResult> LoginUserAsyc(...ViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var searchUser = await _userManager.FindByNameAsync(model.UserNameOrEmail);
-                if(searchUser is null)
-                {
-                    searchUser = await _userManager.FindByEmailAsync(model.UserNameOrEmail);
-                }
-             
-                if (searchUser is not null)
-                {
-                    var result = await _signInManager.PasswordSignInAsync(searchUser, model.Password, false, lockoutOnFailure: false);
-                    if (result.Succeeded)
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", "Invalid login attempt");
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Invalid login attempt");
-                }
-            }
-            return View(model);
-        }
 
         #region Register
 
